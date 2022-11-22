@@ -14,6 +14,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+const PLAYER_STORAGE_KEY = 'Doomers';
+
 const heading =$('header h2')
 const cdThumb = $('.cd-thumb')
 const audio = $('#audio')
@@ -24,7 +26,7 @@ const nextBtn = $('.btn-next');
 const prevBtn = $('.btn-prev');
 const randomBtn = $('.btn-random');
 const repeatBtn = $('.btn-repeat');
-
+const playlist =  $('.playlist');
 
 const app = {
   songs: [
@@ -80,8 +82,8 @@ const app = {
     {
       name: "I Don't Think That I Like Her",
       singer: "Charlie Puth",
-      path: "./songs/.mp3",
-      image: "./img/wolves.jpg",
+      path: "./songs/DontThinkThatILikeHer.mp3",
+      image: "./img/like_her.jpg",
     },
 
     {
@@ -126,11 +128,13 @@ const app = {
 
   isRandom: false,
 
+  settings: {},
+
   render: function () {
 
-    const htmls = this.songs.map((song) => {
+    const htmls = this.songs.map((song, index) => {
       return `
-                <div class="song">
+                <div class="song ${index === this.currentIndex ? 'active' : ''}" data-index = "${index}">
                 <div class="thumb"
                     style="background-image: url('${song.image}')">
                 </div>
@@ -251,7 +255,6 @@ const app = {
 
     //Track the progress playing song
     audio.ontimeupdate = function () {
-      console.log(audio.currentTime / audio.duration * 100 +' %');
       if (audio.duration) {
         const progressPercent = Math.floor(audio.currentTime / audio.duration * 100)
         progress.value = progressPercent;
@@ -264,6 +267,9 @@ const app = {
         audio.play();
       };
       
+      if(app.isRandom){
+
+      }
     };
     
     //Seeking the song playing
@@ -276,29 +282,53 @@ const app = {
     
     //Next or previous song , repat song
     nextBtn.onclick = function (){
+        if(app.isRandom){
+          app.randomSong();
+        }else{
+
         app.nextSong();
+        }
+
         audio.play();
+        app.render();
     };
     prevBtn.onclick = function () {
-      app.prevSong();
+      if(app.isRandom)
+      {
+        app.randomSong();
+      } else{
+        app.prevSong();
+      }
       audio.play();
+      app.render();
     };
     repeatBtn.onclick = function () {
       audio.currentTime = 0;
       audio.play();
     };
     
-    //Random song
+    //Mode playing song randomly 
     randomBtn.onclick = function () {
-      app.songs.some
-      app.randomSong();
+    
+      app.isRandom = !app.isRandom;
+      randomBtn.classList.toggle('active', app.isRandom);
+      // app.randomSong();
+
     };
     
     //Opt song to play
-    const song = $('.playlist .song');
-    console.log(song);
-    song.onclick = function () {
-      audio.play()
+    playlist.onclick = function (e) {
+      if(e.target.closest('.song:not(.active)') ||
+         !e.target.closest('.option')
+      ){
+        //Pick song 
+        if(e.target.closest('.song:not(.active)')){
+           app.currentIndex = Number(e.target.closest('.song:not(.active)').dataset.index);
+           app.loadCurrentSong();
+           app.render();
+           audio.play();
+        }
+      }
     }
   },
 
